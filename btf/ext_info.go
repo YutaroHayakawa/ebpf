@@ -479,30 +479,14 @@ var LineInfoSize = uint32(binary.Size(bpfLineInfo{}))
 // Line represents the location and contents of a single line of source
 // code a BPF ELF was compiled from.
 type Line struct {
-	fileName   string
-	line       string
-	lineNumber uint32
-	lineColumn uint32
-}
-
-func (li *Line) FileName() string {
-	return li.fileName
-}
-
-func (li *Line) Line() string {
-	return li.line
-}
-
-func (li *Line) LineNumber() uint32 {
-	return li.lineNumber
-}
-
-func (li *Line) LineColumn() uint32 {
-	return li.lineColumn
+	FileName   string
+	Line       string
+	LineNumber uint32
+	LineColumn uint32
 }
 
 func (li *Line) String() string {
-	return li.line
+	return li.Line
 }
 
 // LineInfos contains a sorted list of line infos.
@@ -591,29 +575,29 @@ func newLineInfos(blis []bpfLineInfo, strings *stringTable) (LineInfos, error) {
 // marshal writes the binary representation of the LineInfo to w.
 func (li *lineInfo) marshal(w *bytes.Buffer, b *Builder) error {
 	line := li.line
-	if line.lineNumber > bpfLineMax {
-		return fmt.Errorf("line %d exceeds %d", line.lineNumber, bpfLineMax)
+	if line.LineNumber > bpfLineMax {
+		return fmt.Errorf("line %d exceeds %d", line.LineNumber, bpfLineMax)
 	}
 
-	if line.lineColumn > bpfColumnMax {
-		return fmt.Errorf("column %d exceeds %d", line.lineColumn, bpfColumnMax)
+	if line.LineColumn > bpfColumnMax {
+		return fmt.Errorf("column %d exceeds %d", line.LineColumn, bpfColumnMax)
 	}
 
-	fileNameOff, err := b.addString(line.fileName)
+	fileNameOff, err := b.addString(line.FileName)
 	if err != nil {
-		return fmt.Errorf("file name %q: %w", line.fileName, err)
+		return fmt.Errorf("file name %q: %w", line.FileName, err)
 	}
 
-	lineOff, err := b.addString(line.line)
+	lineOff, err := b.addString(line.Line)
 	if err != nil {
-		return fmt.Errorf("line %q: %w", line.line, err)
+		return fmt.Errorf("line %q: %w", line.Line, err)
 	}
 
 	bli := bpfLineInfo{
 		uint32(li.offset),
 		fileNameOff,
 		lineOff,
-		(line.lineNumber << bpfLineShift) | line.lineColumn,
+		(line.LineNumber << bpfLineShift) | line.LineColumn,
 	}
 
 	buf := make([]byte, LineInfoSize)
